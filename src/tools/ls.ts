@@ -11,7 +11,7 @@ export const lsTool: Tool = {
   spec: {
     name: "ls",
     description:
-      "List directory contents. Directories end with '/'. Use recursive=true for an indented tree (skips node_modules, .git, dist, etc.).",
+      "List directory contents; directories end with '/'. recursive=true shows an indented tree (skips node_modules, .git, dist, etc.). Use glob to find files by pattern and grep to search file contents.",
     parameters: {
       type: "object",
       properties: {

@@ -9,7 +9,7 @@ export const globTool: Tool = {
   spec: {
     name: "glob",
     description:
-      "Find files by glob pattern, e.g. \"src/**/*.ts\" or \"*.json\". Paths are relative to the search base. Skips node_modules, .git, dist, etc.",
+      "Find files by glob pattern, e.g. \"src/**/*.ts\" or \"*.json\". Paths are relative to the search base; node_modules, .git, dist etc. are skipped. Use grep to search file contents and read_file to read a specific file.",
     parameters: {
       type: "object",
       properties: {

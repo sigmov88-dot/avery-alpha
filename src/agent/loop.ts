@@ -63,6 +63,10 @@ export function summarizeArgs(toolName: string, args: Record<string, unknown>): 
       return String(args.pattern ?? "");
     case "grep":
       return `${args.pattern ?? ""} ${args.path ?? ""}`.trim();
+    case "todo_write": {
+      const n = Array.isArray(args.todos) ? args.todos.length : 0;
+      return `${n} пунктов в чеклисте`;
+    }
     default:
       return JSON.stringify(args).slice(0, 120);
   }

@@ -10,7 +10,7 @@ export const bashTool: Tool = {
   spec: {
     name: "bash",
     description:
-      "Run a bash command in the project directory. Returns stdout and stderr. Non-zero exit codes are reported, not thrown.",
+      "Run a bash command in the project directory — builds, tests, git, package managers, scripts. Returns stdout and stderr; non-zero exit codes are reported, not thrown. Prefer the dedicated file tools (read_file/write_file/edit_file/glob/grep) over shell equivalents: they are sandboxed and produce cleaner output. Destructive commands (rm -rf, git reset --hard, git push --force) only when the user explicitly asked for that exact action.",
     parameters: {
       type: "object",
       properties: {

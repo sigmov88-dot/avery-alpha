@@ -9,7 +9,7 @@ export const writeFileTool: Tool = {
   spec: {
     name: "write_file",
     description:
-      "Create a new file or overwrite an existing one with the given content. Parent directories are created automatically. Prefer edit_file for targeted changes to existing files.",
+      "Create a new file or fully overwrite an existing one with the given content. Parent directories are created automatically. Prefer edit_file for targeted changes to existing files. Do not create files unless the task requires them, and never write documentation unless asked.",
     parameters: {
       type: "object",
       properties: {

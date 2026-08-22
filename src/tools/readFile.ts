@@ -11,7 +11,7 @@ export const readFileTool: Tool = {
   spec: {
     name: "read_file",
     description:
-      "Read a text file from the project. Returns numbered lines. Use offset/limit to page through large files.",
+      "Read a text file from the project; returns numbered lines. Use offset/limit to page through large files instead of reading them whole — context is precious. Always read a file before editing it. To find files by name use glob, to search contents use grep, to list a directory use ls.",
     parameters: {
       type: "object",
       properties: {
