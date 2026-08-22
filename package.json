@@ -1,0 +1,54 @@
+{
+  "name": "avery-cli",
+  "version": "0.3.0",
+  "description": "Avery — terminal AI coding agent (OpenCode ZEN · Anthropic · OpenAI · Gemini · Ollama · MCP)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "avery": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/cli.js",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai",
+    "cli",
+    "coding-agent",
+    "opencode",
+    "opencode-zen",
+    "anthropic",
+    "claude",
+    "openai",
+    "gemini",
+    "ollama",
+    "mcp",
+    "llm",
+    "terminal",
+    "tui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sigmov88-dot/avery-alpha.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sigmov88-dot/avery-alpha/issues"
+  },
+  "homepage": "https://github.com/sigmov88-dot/avery-alpha#readme",
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
