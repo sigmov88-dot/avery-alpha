@@ -136,7 +136,7 @@ try {
   await step("avery --version", async () => {
     const r = await run(["--version"]);
     assert.equal(r.status, 0);
-    assert.match(r.stdout, /0\.3\.1/);
+    assert.match(r.stdout, /0\.5\.0/);
   });
 
   await step("avery --help", async () => {

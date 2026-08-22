@@ -27,8 +27,18 @@ import { firstLine } from "./render.ts";
 import { selectList } from "./select.ts";
 import { Spinner } from "./spinner.ts";
 
+/** Синтетический ход для /init: агент изучает проект и пишет AVERY.md. */
+const INIT_PROMPT =
+  "Проанализируй этот проект и создай AVERY.md в корне — инструкции для AI-агента. " +
+  "Сначала изучи package.json (скрипты, зависимости), README, структуру каталогов (ls, glob) " +
+  "и 2-3 ключевых файла. Запиши: назначение и стек проекта, точные команды сборки/тестов/линта, " +
+  "структуру каталогов, конвенции кода и правила, которых должен придерживаться агент. " +
+  "Сжато и по делу, на русском. Если AVERY.md уже существует — прочитай его и предложи " +
+  "точечные обновления через edit_file вместо перезаписи.";
+
 const SLASH_COMMANDS = [
   "/help",
+  "/init",
   "/model",
   "/provider",
   "/mcp",
@@ -65,6 +75,8 @@ interface SlashCtx {
   resumeRl: () => void;
   /** true, пока открыт raw-mode селектор — Ctrl+C там = отмена пикера. */
   picker: { open: boolean };
+  /** Очередь синтетических ходов (например, /init). */
+  pending: string[];
 }
 
 function question(rl: readline.Interface, prompt?: string): Promise<string> {
@@ -90,6 +102,7 @@ export async function startTui(o: TuiOptions): Promise<void> {
   const totals: Totals = { input: 0, output: 0, cost: undefined };
   let controller: AbortController | null = null;
   const picker = { open: false };
+  const pendingInputs: string[] = [];
   const mcpNames = (o.mcp?.statuses ?? []).filter((s) => s.ok).map((s) => s.name);
 
   /** Аккуратный выход: сохранить сессию и закрыть MCP-серверы. */
@@ -162,6 +175,8 @@ export async function startTui(o: TuiOptions): Promise<void> {
           dim(req.summary) +
           "\n",
       );
+      // diff preview правки — перед вопросом, чтобы решение было не вслепую
+      if (req.preview) process.stdout.write(req.preview + "\n");
       rl.question("  [y] да / [N] нет (Enter) / [a] всегда: ", (ans) => {
         const a = ans.trim().toLowerCase();
         if (a === "a" || a === "always" || a === "в") {
@@ -189,7 +204,7 @@ export async function startTui(o: TuiOptions): Promise<void> {
     });
 
   for (;;) {
-    let input = await question(rl);
+    let input = pendingInputs.shift() ?? (await question(rl));
     while (input.endsWith("\\")) {
       input = input.slice(0, -1) + "\n" + (await question(rl, dim("… ")));
     }
@@ -197,7 +212,7 @@ export async function startTui(o: TuiOptions): Promise<void> {
     if (input.length === 0) continue;
 
     if (input.startsWith("/")) {
-      const shouldExit = await handleSlash(input, { rl, o, totals, resumeRl, picker });
+      const shouldExit = await handleSlash(input, { rl, o, totals, resumeRl, picker, pending: pendingInputs });
       if (shouldExit) break;
       continue;
     }
@@ -359,6 +374,7 @@ async function handleSlash(input: string, ctx: SlashCtx): Promise<boolean> {
           "",
           bold("Avery — команды"),
           "  /help             эта справка",
+          "  /init             агент анализирует проект и пишет AVERY.md",
           "  /model [id]       все модели провайдера (↑↓ — листать, ввод — фильтр)",
           "  /provider [name]  провайдер: zen · anthropic · openai · gemini · ollama · custom",
           "  /mcp              статус MCP-серверов (avery mcp add — добавить)",
@@ -373,6 +389,12 @@ async function handleSlash(input: string, ctx: SlashCtx): Promise<boolean> {
         ].join("\n"),
       );
       return false;
+
+    case "init": {
+      ctx.pending.push(INIT_PROMPT);
+      out(dim("(запускаю анализ проекта → AVERY.md…)"));
+      return false;
+    }
 
     case "clear":
       ctx.o.session.messages = [];
