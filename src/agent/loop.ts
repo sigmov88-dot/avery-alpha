@@ -10,6 +10,7 @@ import {
   type PermissionHandler,
   type PermissionMode,
 } from "./permissions.ts";
+import { buildEditPreview } from "./preview.ts";
 
 export interface AgentHooks {
   onText?: (text: string) => void;
@@ -163,10 +164,22 @@ export async function runAgentLoop(
       }
 
       const summary = summarizeArgs(tool.spec.name, args);
+      // В интерактивном режиме для write/edit собираем визуальный дифф —
+      // пользователь видит изменение до подтверждения, а не вслепую.
+      const preview =
+        opts.mode === "ask" && opts.ask
+          ? await buildEditPreview(
+              tool.spec.name,
+              args,
+              opts.cwd,
+              opts.allowOutsideCwd === true,
+            )
+          : undefined;
       const allowed = await check({
         tool: tool.spec.name,
         kind: tool.kind,
         summary,
+        preview,
       });
       if (!allowed) {
         opts.hooks.onToolDenied?.(call);

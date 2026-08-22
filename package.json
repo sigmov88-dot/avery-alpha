@@ -1,6 +1,6 @@
 {
   "name": "avery-cli",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Avery — terminal AI coding agent (OpenCode ZEN · Anthropic · OpenAI · Gemini · Ollama · MCP)",
   "license": "MIT",
   "type": "module",

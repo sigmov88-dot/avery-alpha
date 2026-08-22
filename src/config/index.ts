@@ -43,7 +43,7 @@ export interface AveryConfig {
   [key: string]: unknown;
 }
 
-export const VERSION = "0.3.1";
+export const VERSION = "0.4.0";
 export const DEFAULT_MODEL = "big-pickle";
 export const DEFAULT_BASE_URL = "https://opencode.ai/zen/v1";
 export const DEFAULT_ANTHROPIC_BASE_URL = "https://api.anthropic.com";

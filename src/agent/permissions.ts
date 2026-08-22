@@ -6,6 +6,8 @@ export interface PermissionRequest {
   kind: ToolKind;
   /** Short human-readable target, e.g. file path or bash command. */
   summary: string;
+  /** Visual diff of the pending edit (write_file/edit_file), if built. */
+  preview?: string;
 }
 
 export type PermissionHandler = (req: PermissionRequest) => Promise<boolean>;
