@@ -142,7 +142,7 @@ node scripts/e2e.mjs   # e2e с мок-сервером ZEN и MCP
 npm run build      # сборка в dist/
 ```
 
-Как помочь проекту — [CONTRIBUTING.md](CONTRIBUTING.md). Сообщить об уязвимости — [SECURITY.md](SECURITY.md).
+Планы развития — [docs/ROADMAP.md](docs/ROADMAP.md). Как помочь проекту — [CONTRIBUTING.md](CONTRIBUTING.md). Сообщить об уязвимости — [SECURITY.md](SECURITY.md).
 
 ## Лицензия
 

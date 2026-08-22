@@ -148,12 +148,14 @@ async function resolveSession(
 /** Вынимает --cwd <dir> из сырых аргументов подкоманды. */
 function extractCwd(args: string[]): { args: string[]; cwd: string } {
   const idx = args.indexOf("--cwd");
-  if (idx === -1 || idx + 1 >= args.length) {
+  if (idx === -1) {
     return { args, cwd: path.resolve(process.cwd()) };
   }
-  const dir = args[idx + 1]!;
+  // Флаг убираем всегда — иначе висячий "--cwd" без значения протекает
+  // дальше в парсер подкоманды (например, в `mcp add`).
+  const dir = args[idx + 1];
   const rest = [...args.slice(0, idx), ...args.slice(idx + 2)];
-  return { args: rest, cwd: path.resolve(dir) };
+  return { args: rest, cwd: path.resolve(dir ?? process.cwd()) };
 }
 
 async function main(): Promise<number> {
