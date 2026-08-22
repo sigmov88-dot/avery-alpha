@@ -240,7 +240,16 @@ export class McpClient {
       }
       return;
     }
-    const body = (await res.json()) as JsonRpcMessage | JsonRpcMessage[];
+    const text = await res.text();
+    // Часть серверов отвечает на уведомления 200 с пустым телом — это не
+    // ошибка, диспетчить нечего.
+    if (text.trim().length === 0) return;
+    let body: JsonRpcMessage | JsonRpcMessage[];
+    try {
+      body = JSON.parse(text) as JsonRpcMessage | JsonRpcMessage[];
+    } catch {
+      return; // не-JSON ответ — игнорируем
+    }
     for (const msg of Array.isArray(body) ? body : [body]) {
       this.dispatch(msg);
     }

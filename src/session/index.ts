@@ -89,8 +89,15 @@ export function listSessions(cwd?: string): Session[] {
       // skip corrupted session files
     }
   }
-  const filtered = cwd ? sessions.filter((s) => s.cwd === cwd) : sessions;
+  const filtered = cwd
+    ? sessions.filter((s) => normalizeCwd(s.cwd) === normalizeCwd(cwd))
+    : sessions;
   return filtered.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/** "/proj" и "/proj/" — один и тот же проект. */
+function normalizeCwd(p: string): string {
+  return p.replace(/[/\\]+$/, "");
 }
 
 export function latestSession(cwd: string): Session | undefined {
