@@ -28,6 +28,8 @@ export function buildSystemPrompt(opts: {
   model: string;
   /** Names of connected MCP servers, if any. */
   mcpServers?: string[];
+  /** Permission mode — "plan" adds the plan-mode section. */
+  mode?: string;
 }): string {
   const project = loadProjectInstructions(opts.cwd);
   const today = new Date().toISOString().slice(0, 10);
@@ -74,7 +76,17 @@ export function buildSystemPrompt(opts: {
     `- write_file / edit_file — change files (approval may be asked; the user sees a diff preview).`,
     `- bash — run commands (approval may be asked).`,
     `- todo_write — the session checklist for multi-step work.`,
+    `- task — a read-only subagent for open-ended codebase research in its own context.`,
   ];
+  if (opts.mode === "plan") {
+    parts.push(
+      ``,
+      `# Plan mode (ACTIVE)`,
+      `- The user switched to plan mode: explore with the read-only tools, but do NOT call write_file, edit_file or bash — they will be denied.`,
+      `- Instead, produce a concrete implementation plan: what to change, in which files, in which order, and the risks.`,
+      `- End by telling the user to press Shift+Tab to switch back, so you can execute the plan.`,
+    );
+  }
   if (opts.mcpServers && opts.mcpServers.length > 0) {
     parts.push(
       `- MCP tools named mcp__<server>__<tool> come from the connected MCP servers: ${opts.mcpServers.join(", ")}. Prefer them when they fit the task.`,

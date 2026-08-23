@@ -36,6 +36,26 @@ const INIT_PROMPT =
   "Сжато и по делу, на русском. Если AVERY.md уже существует — прочитай его и предложи " +
   "точечные обновления через edit_file вместо перезаписи.";
 
+/** Режимы разрешений, переключаемые Shift+Tab (как в Claude Code). */
+const MODES = ["ask", "accept-edits", "plan"] as const;
+type TuiMode = (typeof MODES)[number];
+
+function normalizeMode(v: unknown): TuiMode {
+  return MODES.includes(v as TuiMode) ? (v as TuiMode) : "ask";
+}
+
+function modeLabel(mode: TuiMode): string {
+  if (mode === "plan") return "plan — только исследование и план";
+  if (mode === "accept-edits") return "accept-edits — правки без вопросов";
+  return "ask — спрашивать разрешение";
+}
+
+function promptFor(mode: TuiMode): string {
+  if (mode === "plan") return cyan("plan ❯ ");
+  if (mode === "accept-edits") return yellow("accept ❯ ");
+  return cyan("❯ ");
+}
+
 const SLASH_COMMANDS = [
   "/help",
   "/init",
@@ -103,6 +123,8 @@ export async function startTui(o: TuiOptions): Promise<void> {
   let controller: AbortController | null = null;
   const picker = { open: false };
   const pendingInputs: string[] = [];
+  /** Текущий режим разрешений (Shift+Tab); сохраняется в сессии. */
+  const currentMode = (): TuiMode => normalizeMode(o.session.mode);
   const mcpNames = (o.mcp?.statuses ?? []).filter((s) => s.ok).map((s) => s.name);
 
   /** Аккуратный выход: сохранить сессию и закрыть MCP-серверы. */
@@ -156,6 +178,18 @@ export async function startTui(o: TuiOptions): Promise<void> {
     );
   });
 
+  // Shift+Tab — цикл режимов: ask → accept-edits → plan (как в Claude Code).
+  // Применяется со следующего хода: текущий уже запущен со своим режимом.
+  process.stdin.on("keypress", (_ch, key) => {
+    if (picker.open || !key || key.name !== "backtab") return;
+    const next = MODES[(MODES.indexOf(currentMode()) + 1) % MODES.length]!;
+    o.session.mode = next;
+    saveSession(o.session);
+    process.stdout.write(
+      "\n" + yellow(`⚡ режим: ${modeLabel(next)}`) + dim("  (Shift+Tab — переключить)") + "\n",
+    );
+  });
+
   // After the raw-mode selector, the host readline's line buffer may hold
   // junk from arrow keys — reset it before the next question.
   const resumeRl = () => {
@@ -204,7 +238,7 @@ export async function startTui(o: TuiOptions): Promise<void> {
     });
 
   for (;;) {
-    let input = pendingInputs.shift() ?? (await question(rl));
+    let input = pendingInputs.shift() ?? (await question(rl, promptFor(currentMode())));
     while (input.endsWith("\\")) {
       input = input.slice(0, -1) + "\n" + (await question(rl, dim("… ")));
     }
@@ -253,6 +287,7 @@ export async function startTui(o: TuiOptions): Promise<void> {
               cwd: o.cwd,
               model: o.session.model,
               mcpServers: mcpNames,
+              mode: currentMode(),
             }),
           },
           ...o.session.messages,
@@ -262,7 +297,7 @@ export async function startTui(o: TuiOptions): Promise<void> {
         maxIterations: o.maxIterations,
         allow,
         allowOutsideCwd: o.config.allowOutsideCwd === true,
-        mode: "ask",
+        mode: currentMode(),
         ask,
         signal: controller.signal,
         hooks: {
@@ -375,6 +410,7 @@ async function handleSlash(input: string, ctx: SlashCtx): Promise<boolean> {
           bold("Avery — команды"),
           "  /help             эта справка",
           "  /init             агент анализирует проект и пишет AVERY.md",
+          "  Shift+Tab         режим разрешений: ask → accept-edits → plan",
           "  /model [id]       все модели провайдера (↑↓ — листать, ввод — фильтр)",
           "  /provider [name]  провайдер: zen · anthropic · openai · gemini · ollama · custom",
           "  /mcp              статус MCP-серверов (avery mcp add — добавить)",
