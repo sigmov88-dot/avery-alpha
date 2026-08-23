@@ -7,12 +7,15 @@ import { lsTool } from "./ls.ts";
 import { globTool } from "./glob.ts";
 import { grepTool } from "./grep.ts";
 import { todoWriteTool } from "./todo.ts";
+import { taskTool } from "./task.ts";
 
 export interface ToolContext {
   cwd: string;
   signal?: AbortSignal;
   /** Разрешить файловым тулам выход за пределы cwd (config allowOutsideCwd). */
   allowOutsideCwd?: boolean;
+  /** Запуск read-only сабагента (доступен внутри агентного цикла). */
+  runSubagent?: (prompt: string, ctx: ToolContext) => Promise<string>;
 }
 
 export type ToolKind = "read" | "write" | "execute";
@@ -34,6 +37,7 @@ export function defaultTools(): Tool[] {
     globTool,
     grepTool,
     todoWriteTool,
+    taskTool,
   ];
 }
 

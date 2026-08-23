@@ -67,6 +67,8 @@ export function summarizeArgs(toolName: string, args: Record<string, unknown>): 
       const n = Array.isArray(args.todos) ? args.todos.length : 0;
       return `${n} пунктов в чеклисте`;
     }
+    case "task":
+      return String(args.description ?? args.prompt ?? "").slice(0, 80);
     default:
       return JSON.stringify(args).slice(0, 120);
   }
@@ -109,7 +111,7 @@ export async function runAgentLoop(
       {
         model: opts.model,
         messages,
-        tools: toSpecs(opts.tools),
+        tools: opts.tools.length > 0 ? toSpecs(opts.tools) : undefined,
         signal: opts.signal,
       },
       {
@@ -192,7 +194,9 @@ export async function runAgentLoop(
           toolCallId: call.id,
           name: call.name,
           content:
-            "Error: permission denied by the user. Do not retry the same action — ask the user or propose an alternative.",
+            opts.mode === "plan"
+              ? "Error: plan mode is active — file changes and command execution are disabled. Explore with the read-only tools and present the implementation plan as plain text; the user approves by switching modes (Shift+Tab)."
+              : "Error: permission denied by the user. Do not retry the same action — ask the user or propose an alternative.",
         });
         continue;
       }
@@ -202,6 +206,7 @@ export async function runAgentLoop(
         cwd: opts.cwd,
         signal: opts.signal,
         allowOutsideCwd: opts.allowOutsideCwd === true,
+        runSubagent: (prompt) => runSubagent(opts, prompt),
       };
       let result: string;
       let isError = false;
@@ -222,4 +227,44 @@ export async function runAgentLoop(
   }
 
   return { messages, stopReason: "max-iterations", usage };
+}
+
+/**
+ * Read-only research subagent: own context window, capped iterations, only
+ * the parent's read tools (task itself excluded — no recursion). Muted hooks.
+ */
+async function runSubagent(
+  opts: AgentLoopOptions,
+  prompt: string,
+): Promise<string> {
+  const subTools = opts.tools.filter(
+    (t) => t.kind === "read" && t.spec.name !== "task",
+  );
+  const sub = await runAgentLoop({
+    provider: opts.provider,
+    model: opts.model,
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a research subagent of Avery. Explore the project with the read-only tools and answer the task concisely: concrete file paths, symbols, and key findings. You cannot modify files or run commands.",
+      },
+      { role: "user", content: prompt },
+    ],
+    tools: subTools,
+    cwd: opts.cwd,
+    maxIterations: 15,
+    allow: [],
+    mode: "auto",
+    allowOutsideCwd: opts.allowOutsideCwd === true,
+    signal: opts.signal,
+    hooks: {},
+  });
+  const last = sub.messages[sub.messages.length - 1];
+  return last &&
+    last.role === "assistant" &&
+    typeof last.content === "string" &&
+    last.content.trim().length > 0
+    ? last.content
+    : "(subagent returned no answer)";
 }

@@ -12,6 +12,8 @@ export interface Session {
   updatedAt: string;
   /** Провайдер сессии: "zen" | "ollama" */
   provider?: string;
+  /** Режим разрешений TUI: ask | accept-edits | plan (переключается Shift+Tab). */
+  mode?: string;
   title?: string;
   messages: ChatMessage[];
 }
