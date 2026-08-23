@@ -26,6 +26,7 @@ import { StreamMarkdown } from "./markdown.ts";
 import { firstLine } from "./render.ts";
 import { selectList } from "./select.ts";
 import { Spinner } from "./spinner.ts";
+import { THINK_FRAMES } from "./mascot.ts";
 
 /** Синтетический ход для /init: агент изучает проект и пишет AVERY.md. */
 const INIT_PROMPT =
@@ -275,7 +276,7 @@ export async function startTui(o: TuiOptions): Promise<void> {
       if (rest.length > 0) process.stdout.write(rest);
     };
 
-    think.start("avery думает…");
+    think.start("avery думает…", { frames: THINK_FRAMES });
     try {
       const result = await runAgentLoop({
         provider: o.provider,
@@ -315,18 +316,21 @@ export async function startTui(o: TuiOptions): Promise<void> {
             if (!needLabel) process.stdout.write("\n");
             needLabel = true;
             toolT0 = Date.now();
-            toolSpin.start(`${yellow(call.name)} ${dim(summary)}`);
+            process.stdout.write(
+              dim("╭─ ") + yellow(call.name) + (summary ? dim("  " + summary) : "") + "\n",
+            );
+            toolSpin.start(dim("│ выполняю…"));
           },
           onToolResult: (call, resultText, isError) => {
             const dt = ((Date.now() - toolT0) / 1000).toFixed(1);
             toolSpin.stop(
-              ` ${isError ? red("✗") : green("✓")} ${bold(call.name)} ${dim(firstLine(resultText))} ${dim(`(${dt}s)`)}`,
+              `${dim("╰─")} ${isError ? red("✗") : green("✓")} ${bold(call.name)} ${dim(firstLine(resultText))} ${dim(`(${dt}s)`)}`,
             );
-            think.start("avery думает…");
+            think.start("avery думает…", { frames: THINK_FRAMES });
           },
           onToolDenied: (call) => {
-            toolSpin.stop(` ${red("✗")} ${bold(call.name)} ${red("отклонено")}`);
-            think.start("avery думает…");
+            toolSpin.stop(`${dim("╰─")} ${red("✗")} ${bold(call.name)} ${red("отклонено")}`);
+            think.start("avery думает…", { frames: THINK_FRAMES });
           },
           onUsage: (u) => {
             turn.input += u.inputTokens;
@@ -346,7 +350,7 @@ export async function startTui(o: TuiOptions): Promise<void> {
       saveSession(o.session);
 
       const secs = ((Date.now() - t0) / 1000).toFixed(1);
-      const parts = [`${turn.input} in`, `${turn.output} out`];
+      const parts = [o.session.model, `${turn.input} in`, `${turn.output} out`];
       if (turn.cost !== undefined) parts.push(`$${turn.cost.toFixed(4)}`);
       parts.push(`${secs}s`);
       process.stdout.write("\n\n" + dim("  " + parts.join(" · ")) + "\n" + rule() + "\n\n");

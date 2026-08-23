@@ -6,6 +6,7 @@ const FRAME_MS = 80;
 /**
  * Animated single-line spinner with elapsed time. No-op on non-TTY.
  * `stop()` erases the line; pass a final line to leave a result behind.
+ * Custom frames via start(text, { frames }) — e.g. mascot frames.
  */
 export class Spinner {
   private timer: NodeJS.Timeout | undefined;
@@ -13,11 +14,13 @@ export class Spinner {
   private startedAt = 0;
   private text = "";
   private active = false;
+  private frames: string[] = FRAMES;
 
-  start(text: string): void {
+  start(text: string, opts?: { frames?: string[] }): void {
     if (!process.stdout.isTTY) return;
     this.stop();
     this.text = text;
+    this.frames = opts?.frames ?? FRAMES;
     this.startedAt = Date.now();
     this.active = true;
     this.render();
@@ -45,7 +48,7 @@ export class Spinner {
   }
 
   private render(): void {
-    const frame = FRAMES[this.frame++ % FRAMES.length] ?? "-";
+    const frame = this.frames[this.frame++ % this.frames.length] ?? "-";
     const secs = Math.floor((Date.now() - this.startedAt) / 1000);
     const elapsed = secs >= 2 ? dim(` ${secs}s`) : "";
     process.stdout.write(`\r\x1b[2K ${cyan(frame)} ${this.text}${elapsed}`);
