@@ -1,5 +1,6 @@
 import { VERSION } from "../config/index.ts";
 import { bold, cyan, dim, gradientLines, rule, sleep } from "./ansi.ts";
+import { mascotLines } from "./mascot.ts";
 
 const ART = [
   " █████╗ ██╗   ██╗███████╗██████╗ ██╗   ██╗",
@@ -19,7 +20,7 @@ export interface BannerInfo {
   cwd: string;
 }
 
-/** Animated gradient banner with a line-by-line reveal. */
+/** Animated gradient banner with a line-by-line reveal, mascot Avi aside. */
 export async function printBanner(info: BannerInfo): Promise<void> {
   const wide = (process.stdout.columns ?? 80) >= 50;
   process.stdout.write("\n");
@@ -32,17 +33,16 @@ export async function printBanner(info: BannerInfo): Promise<void> {
   } else {
     process.stdout.write("  " + cyan(bold("⚡ AVERY")) + "\n");
   }
-  process.stdout.write(
-    [
-      "",
-      "  " + bold(`Avery ${VERSION}`) + dim(" — AI coding agent в терминале"),
-      "  " +
-        dim(`провайдер: ${info.provider} · модель: ${info.model || "— (выбери через /model)"}`),
-      "  " + dim(`каталог: ${info.cwd}`),
-      "  " +
-        dim("/help — команды · /model — модели (↑↓) · /provider — сменить провайдера"),
-      rule(),
-      "",
-    ].join("\n") + "\n",
+  // Маскот Avi рядом с метаданными сессии
+  const meta = [
+    bold(`Avery ${VERSION}`) + dim(" — AI coding agent в терминале"),
+    dim(`провайдер: ${info.provider} · модель: ${info.model || "— (выбери через /model)"}`),
+    dim(`каталог: ${info.cwd}`),
+    dim("/help — команды · /model — модели (↑↓) · Shift+Tab — режимы"),
+  ];
+  const bird = mascotLines("idle");
+  const lines = bird.map(
+    (l, i) => "  " + cyan(l) + (meta[i] !== undefined ? "  " + meta[i]! : ""),
   );
+  process.stdout.write("\n" + lines.join("\n") + "\n" + rule() + "\n\n");
 }
