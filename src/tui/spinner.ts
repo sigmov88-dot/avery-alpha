@@ -45,7 +45,7 @@ export class Spinner {
   }
 
   private render(): void {
-    const frame = FRAMES[this.frame++ % FRAMES.length];
+    const frame = FRAMES[this.frame++ % FRAMES.length] ?? "-";
     const secs = Math.floor((Date.now() - this.startedAt) / 1000);
     const elapsed = secs >= 2 ? dim(` ${secs}s`) : "";
     process.stdout.write(`\r\x1b[2K ${cyan(frame)} ${this.text}${elapsed}`);
