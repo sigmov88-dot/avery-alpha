@@ -6,6 +6,7 @@ import { bashTool } from "./bash.ts";
 import { lsTool } from "./ls.ts";
 import { globTool } from "./glob.ts";
 import { grepTool } from "./grep.ts";
+import { todoWriteTool } from "./todo.ts";
 
 export interface ToolContext {
   cwd: string;
@@ -32,6 +33,7 @@ export function defaultTools(): Tool[] {
     lsTool,
     globTool,
     grepTool,
+    todoWriteTool,
   ];
 }
 

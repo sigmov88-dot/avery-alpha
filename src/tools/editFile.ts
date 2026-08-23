@@ -8,7 +8,7 @@ export const editFileTool: Tool = {
   spec: {
     name: "edit_file",
     description:
-      "Replace an exact string in an existing file. old_string must match exactly one location unless replace_all is true. Include enough surrounding context to make the match unique.",
+      "Replace an exact string in an existing file. old_string must match exactly one location unless replace_all is true (use it for renames). Read the file with read_file first and include enough surrounding context to make the match unique.",
     parameters: {
       type: "object",
       properties: {

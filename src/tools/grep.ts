@@ -12,7 +12,7 @@ export const grepTool: Tool = {
   spec: {
     name: "grep",
     description:
-      "Search file contents with a regular expression. Returns matches as 'file:line: text'. Skips binary files and files over 1 MB.",
+      "Search file contents with a regular expression; returns matches as 'file:line: text'. Skips binary files and files over 1 MB. Prefer this over bash grep/rg. Use glob to find files by name.",
     parameters: {
       type: "object",
       properties: {
